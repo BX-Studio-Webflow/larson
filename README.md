@@ -42,14 +42,15 @@ A monorepo for Larson Air Conditioning's careers website, featuring a dynamic jo
 
 ## Packages
 
-| Package | Description | Tech Stack |
-|---------|-------------|------------|
+| Package                          | Description                       | Tech Stack          |
+| -------------------------------- | --------------------------------- | ------------------- |
 | [larson-client](./larson-client) | Webflow-integrated client library | TypeScript, esbuild |
-| [larson-server](./larson-server) | API server for job data | Next.js, TypeScript |
+| [larson-server](./larson-server) | API server for job data           | Next.js, TypeScript |
 
 ## Features
 
 ### Job Board
+
 - **BambooHR Integration**: Real-time job listings from BambooHR ATS
 - **Featured Jobs**: 4 most recent postings displayed prominently
 - **Department Filtering**: Dynamic filters based on active departments
@@ -57,6 +58,7 @@ A monorepo for Larson Air Conditioning's careers website, featuring a dynamic jo
 - **Webflow Compatible**: Uses `dev-target` attributes for DOM manipulation
 
 ### API
+
 - **RESTful Endpoints**: Clean JSON API for job data
 - **CORS Configured**: Supports Webflow and local development
 - **Type-Safe**: Full TypeScript types throughout
@@ -98,6 +100,7 @@ API_KEY=your_bamboohr_api_key
 ### 3. Start Development Servers
 
 **Terminal 1 - API Server:**
+
 ```bash
 cd larson-server
 pnpm dev
@@ -105,6 +108,7 @@ pnpm dev
 ```
 
 **Terminal 2 - Client Build:**
+
 ```bash
 cd larson-client
 pnpm dev
@@ -240,31 +244,31 @@ Development workflow:
 
 **Root level:**
 
-| Script | Description |
-|--------|-------------|
-| `pnpm lint` | Scan codebase for linting errors |
-| `pnpm lint:fix` | Fix auto-fixable linting issues |
-| `pnpm format` | Format code with Prettier |
-| `pnpm test` | Run all Playwright tests |
-| `pnpm test:headed` | Run Playwright tests with browser UI |
-| `pnpm changeset` | Create a new changeset for version tracking |
-| `pnpm changeset version` | Bump versions from changesets |
+| Script                   | Description                                 |
+| ------------------------ | ------------------------------------------- |
+| `pnpm lint`              | Scan codebase for linting errors            |
+| `pnpm lint:fix`          | Fix auto-fixable linting issues             |
+| `pnpm format`            | Format code with Prettier                   |
+| `pnpm test`              | Run all Playwright tests                    |
+| `pnpm test:headed`       | Run Playwright tests with browser UI        |
+| `pnpm changeset`         | Create a new changeset for version tracking |
+| `pnpm changeset version` | Bump versions from changesets               |
 
 **larson-client:**
 
-| Script | Description |
-|--------|-------------|
-| `pnpm dev` | Start dev server with hot reload at localhost:3000 |
-| `pnpm build` | Build to `dist/` for production |
-| `pnpm check` | TypeScript type checking |
+| Script       | Description                                        |
+| ------------ | -------------------------------------------------- |
+| `pnpm dev`   | Start dev server with hot reload at localhost:3000 |
+| `pnpm build` | Build to `dist/` for production                    |
+| `pnpm check` | TypeScript type checking                           |
 
 **larson-server:**
 
-| Script | Description |
-|--------|-------------|
-| `pnpm dev` | Start Next.js dev server at localhost:8000 |
-| `pnpm build` | Build for production |
-| `pnpm start` | Start production server |
+| Script       | Description                                |
+| ------------ | ------------------------------------------ |
+| `pnpm dev`   | Start Next.js dev server at localhost:8000 |
+| `pnpm build` | Build for production                       |
+| `pnpm start` | Start production server                    |
 
 ## CI/CD
 

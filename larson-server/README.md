@@ -30,11 +30,13 @@ A Next.js API server for Larson Air Conditioning that integrates with BambooHR's
 Returns all open job listings from BambooHR.
 
 **Request:**
+
 ```
 GET /api/jobs
 ```
 
 **Response:**
+
 ```json
 [
   {
@@ -74,6 +76,7 @@ GET /api/jobs
 ```
 
 **Query Parameters (passed to BambooHR):**
+
 - `statusGroups=Open` - Only fetch open positions
 - `sortBy=status` - Sort by job status
 - `sortOrder=DESC` - Descending order
@@ -91,11 +94,13 @@ Submit a job application (forwards to BambooHR).
 The server integrates with BambooHR's Applicant Tracking API:
 
 **API Endpoint:**
+
 ```
 https://api.bamboohr.com/api/gateway.php/larsonairaz/v1/applicant_tracking/jobs
 ```
 
 **Authentication:**
+
 - Uses Basic Auth
 - Username: `API_KEY` from environment
 - Password: `x` (BambooHR convention)
@@ -104,19 +109,19 @@ https://api.bamboohr.com/api/gateway.php/larsonairaz/v1/applicant_tracking/jobs
 
 The raw BambooHR response is transformed to a cleaner format:
 
-| BambooHR Field | Transformed Field |
-|----------------|-------------------|
-| `title.label` | `title` |
-| `location.label` | `location.label` |
-| `location.address.*` | `location.address.*` |
-| `department.label` | `department` |
-| `status.id`, `status.label` | `status` |
-| `hiringLead.firstName + lastName` | `hiringLead.name` |
-| `hiringLead.avatar` | `hiringLead.avatar` |
-| `newApplicantsCount` | `applicants.new` |
-| `activeApplicantsCount` | `applicants.active` |
-| `totalApplicantsCount` | `applicants.total` |
-| `postingUrl` | `postingUrl` |
+| BambooHR Field                    | Transformed Field    |
+| --------------------------------- | -------------------- |
+| `title.label`                     | `title`              |
+| `location.label`                  | `location.label`     |
+| `location.address.*`              | `location.address.*` |
+| `department.label`                | `department`         |
+| `status.id`, `status.label`       | `status`             |
+| `hiringLead.firstName + lastName` | `hiringLead.name`    |
+| `hiringLead.avatar`               | `hiringLead.avatar`  |
+| `newApplicantsCount`              | `applicants.new`     |
+| `activeApplicantsCount`           | `applicants.active`  |
+| `totalApplicantsCount`            | `applicants.total`   |
+| `postingUrl`                      | `postingUrl`         |
 
 ## CORS Configuration
 
@@ -142,9 +147,9 @@ Create a `.env` file in the project root:
 API_KEY=your_bamboohr_api_key_here
 ```
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `API_KEY` | BambooHR API key for authentication | ✅ |
+| Variable  | Description                         | Required |
+| --------- | ----------------------------------- | -------- |
+| `API_KEY` | BambooHR API key for authentication | ✅       |
 
 ## Getting Started
 
@@ -171,13 +176,13 @@ pnpm start
 
 ## Pre-defined Scripts
 
-| Script | Description |
-|--------|-------------|
-| `pnpm dev` | Start development server with hot reload |
-| `pnpm build` | Build for production |
-| `pnpm start` | Start production server |
-| `pnpm lint` | Run ESLint |
-| `pnpm lint:fix` | Fix auto-fixable ESLint issues |
+| Script          | Description                              |
+| --------------- | ---------------------------------------- |
+| `pnpm dev`      | Start development server with hot reload |
+| `pnpm build`    | Build for production                     |
+| `pnpm start`    | Start production server                  |
+| `pnpm lint`     | Run ESLint                               |
+| `pnpm lint:fix` | Fix auto-fixable ESLint issues           |
 
 ## Type Definitions
 

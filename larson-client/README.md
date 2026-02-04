@@ -54,48 +54,48 @@ All DOM manipulation relies exclusively on `dev-target` and `dev-role` attribute
 
 #### Container Elements
 
-| Attribute | Element | Required |
-|-----------|---------|----------|
-| `dev-role="job-container"` | Main job board wrapper | ✅ |
-| `dev-role="job-filters-wrapper"` | Filter buttons container | ✅ |
-| `dev-role="job-pagination-wrapper"` | Pagination controls wrapper | ✅ |
+| Attribute                           | Element                     | Required |
+| ----------------------------------- | --------------------------- | -------- |
+| `dev-role="job-container"`          | Main job board wrapper      | ✅       |
+| `dev-role="job-filters-wrapper"`    | Filter buttons container    | ✅       |
+| `dev-role="job-pagination-wrapper"` | Pagination controls wrapper | ✅       |
 
 #### Job List Elements
 
-| Attribute | Element | Required |
-|-----------|---------|----------|
-| `dev-target="job-list"` | Job cards `<ul>` container | ✅ |
-| `dev-target="one-job-card"` | Job card template `<li>` | ✅ |
-| `dev-role="job-title"` | Job title heading | ✅ |
-| `dev-role="job-desc"` | Job description (shows `location.label`) | ✅ |
-| `dev-target="job-category"` | Department pill | ✅ |
-| `dev-target="job-cta"` | Apply button `<a>` | ✅ |
+| Attribute                   | Element                                  | Required |
+| --------------------------- | ---------------------------------------- | -------- |
+| `dev-target="job-list"`     | Job cards `<ul>` container               | ✅       |
+| `dev-target="one-job-card"` | Job card template `<li>`                 | ✅       |
+| `dev-role="job-title"`      | Job title heading                        | ✅       |
+| `dev-role="job-desc"`       | Job description (shows `location.label`) | ✅       |
+| `dev-target="job-category"` | Department pill                          | ✅       |
+| `dev-target="job-cta"`      | Apply button `<a>`                       | ✅       |
 
 #### Filter Elements
 
-| Attribute | Element | Required |
-|-----------|---------|----------|
-| `dev-target="job-filter-tag"` | Filter button template | ✅ |
-| `dev-target="job-filter-text"` | Filter button text | ✅ |
+| Attribute                      | Element                | Required |
+| ------------------------------ | ---------------------- | -------- |
+| `dev-target="job-filter-tag"`  | Filter button template | ✅       |
+| `dev-target="job-filter-text"` | Filter button text     | ✅       |
 
 #### Pagination Elements
 
-| Attribute | Element | Required |
-|-----------|---------|----------|
-| `dev-target="btn-prev"` | Previous page button | ✅ |
-| `dev-target="btn-next"` | Next page button | ✅ |
-| `dev-target="page-btn-template"` | Page number button template | ✅ |
+| Attribute                        | Element                     | Required |
+| -------------------------------- | --------------------------- | -------- |
+| `dev-target="btn-prev"`          | Previous page button        | ✅       |
+| `dev-target="btn-next"`          | Next page button            | ✅       |
+| `dev-target="page-btn-template"` | Page number button template | ✅       |
 
 #### Featured Jobs Elements (Optional)
 
-| Attribute | Element | Required |
-|-----------|---------|----------|
-| `dev-target="job-list-featured"` | Featured jobs `<ul>` container | ❌ |
-| `dev-target="featured-job-card"` | Featured job card template | ❌ |
-| `dev-target="featured-job-title"` | Featured job title | ❌ |
-| `dev-target="featured-job-desc"` | Featured job location | ❌ |
-| `dev-target="featured-job-category"` | Featured job department | ❌ |
-| `dev-target="featured-job-cta"` | Featured job apply button | ❌ |
+| Attribute                            | Element                        | Required |
+| ------------------------------------ | ------------------------------ | -------- |
+| `dev-target="job-list-featured"`     | Featured jobs `<ul>` container | ❌       |
+| `dev-target="featured-job-card"`     | Featured job card template     | ❌       |
+| `dev-target="featured-job-title"`    | Featured job title             | ❌       |
+| `dev-target="featured-job-desc"`     | Featured job location          | ❌       |
+| `dev-target="featured-job-category"` | Featured job department        | ❌       |
+| `dev-target="featured-job-cta"`      | Featured job apply button      | ❌       |
 
 ### Featured Jobs Section
 
@@ -113,6 +113,7 @@ Displays the **4 most recent** job postings sorted by `postedDate` (newest first
 ```
 
 **Behavior:**
+
 - Automatically renders if elements exist on the page
 - Skips silently if featured elements are not present
 - Jobs open in a new tab when clicking "Apply"
@@ -145,6 +146,7 @@ Filters are dynamically generated based on departments that have at least one ac
 ```
 
 **Behavior:**
+
 - "View all" filter shows all jobs
 - Department filters only show jobs in that department
 - Active filter receives `is-active` class
@@ -164,6 +166,7 @@ Filters are dynamically generated based on departments that have at least one ac
 ```
 
 **Behavior:**
+
 - Shows 5 jobs per page
 - Hidden when total jobs ≤ 5 (adds `hide` class)
 - Prev/Next buttons disabled at bounds (adds `is-disabled` class)
