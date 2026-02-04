@@ -4,8 +4,8 @@ import type { NextRequest } from 'next/server';
 // Add your accepted origins here
 const acceptedOrigins = [
   'http://localhost:3000',
-  'http://localhost:5173',
-  'https://bx-chaloner.webflow.io',
+  'http://localhost:8000',
+  'https://larson-air-conditioning.webflow.io/',
   'https://chaloner.com',
   'https://www.chaloner.com',
 ];
