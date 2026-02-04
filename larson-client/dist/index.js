@@ -3,105 +3,283 @@
   // bin/live-reload.js
   new EventSource(`${"http://localhost:3000"}/esbuild`).addEventListener("change", () => location.reload());
 
-  // src/utils/navbar-animation.ts
-  var NavbarAnimationController = class {
-    state = {
-      current: null,
-      previous: null
-    };
-    dropdownOrder = ["products", "solutions", "resources", "company"];
+  // src/utils/job-board.ts
+  var JOBS_PER_PAGE = 5;
+  var devMode = true;
+  var API_ENDPOINT = devMode ? "http://localhost:8000/api/jobs" : "https://vercel.com/api/jobs";
+  var SELECTORS = {
+    container: '[dev-role="job-container"]',
+    filtersWrapper: '[dev-role="job-filters-wrapper"]',
+    filterTag: '[dev-target="job-filter-tag"]',
+    filterText: '[dev-target="job-filter-text"]',
+    jobList: '[dev-target="job-list"]',
+    jobCard: '[dev-target="one-job-card"]',
+    jobTitle: '[dev-role="job-title"]',
+    jobDesc: '[dev-role="job-desc"]',
+    jobCategory: '[dev-target="job-category"]',
+    jobCta: '[dev-target="job-cta"]',
+    paginationWrapper: '[dev-role="job-pagination-wrapper"]',
+    btnPrev: '[dev-target="btn-prev"]',
+    btnNext: '[dev-target="btn-next"]',
+    pageBtnTemplate: '[dev-target="page-btn-template"]'
+  };
+  var JobBoardController = class {
+    jobs = [];
+    filteredJobs = [];
+    currentPage = 1;
+    currentFilter = null;
+    departments = [];
+    // DOM Elements
+    container = null;
+    filtersWrapper = null;
+    filterTemplate = null;
+    jobList = null;
+    jobCardTemplate = null;
+    paginationWrapper = null;
+    btnPrev = null;
+    btnNext = null;
+    pageBtnTemplate = null;
+    pageBtnWrapper = null;
     /**
-     * Initialize the navbar animation controller
+     * Initialize the job board
      */
-    init() {
-      const toggles = [
-        { element: document.querySelector('[dev-target="products-toggle"]'), name: "products" },
-        { element: document.querySelector('[dev-target="solutions-toggle"]'), name: "solutions" },
-        { element: document.querySelector('[dev-target="resources-toggle"]'), name: "resources" },
-        { element: document.querySelector('[dev-target="company-toggle"]'), name: "company" }
-      ];
-      toggles.forEach(({ element: toggle, name: dropdownName }) => {
-        if (!toggle) {
-          console.error(`Toggle not found for ${dropdownName}`);
-          return;
+    async init() {
+      if (!this.queryElements()) {
+        return;
+      }
+      this.bindEvents();
+      await this.loadJobs();
+    }
+    /**
+     * Query and validate all required DOM elements
+     */
+    queryElements() {
+      this.container = document.querySelector(SELECTORS.container);
+      if (!this.container) {
+        console.error('[JobBoard] Missing required attribute: dev-role="job-container"');
+        return false;
+      }
+      this.filtersWrapper = document.querySelector(SELECTORS.filtersWrapper);
+      if (!this.filtersWrapper) {
+        console.error('[JobBoard] Missing required attribute: dev-role="job-filters-wrapper"');
+        return false;
+      }
+      this.filterTemplate = document.querySelector(SELECTORS.filterTag);
+      if (!this.filterTemplate) {
+        console.error('[JobBoard] Missing required attribute: dev-target="job-filter-tag"');
+        return false;
+      }
+      this.jobList = document.querySelector(SELECTORS.jobList);
+      if (!this.jobList) {
+        console.error('[JobBoard] Missing required attribute: dev-target="job-list"');
+        return false;
+      }
+      this.jobCardTemplate = document.querySelector(SELECTORS.jobCard);
+      if (!this.jobCardTemplate) {
+        console.error('[JobBoard] Missing required attribute: dev-target="one-job-card"');
+        return false;
+      }
+      this.paginationWrapper = document.querySelector(SELECTORS.paginationWrapper);
+      if (!this.paginationWrapper) {
+        console.error('[JobBoard] Missing required attribute: dev-role="job-pagination-wrapper"');
+        return false;
+      }
+      this.btnPrev = document.querySelector(SELECTORS.btnPrev);
+      if (!this.btnPrev) {
+        console.error('[JobBoard] Missing required attribute: dev-target="btn-prev"');
+        return false;
+      }
+      this.btnNext = document.querySelector(SELECTORS.btnNext);
+      if (!this.btnNext) {
+        console.error('[JobBoard] Missing required attribute: dev-target="btn-next"');
+        return false;
+      }
+      this.pageBtnTemplate = document.querySelector(SELECTORS.pageBtnTemplate);
+      if (!this.pageBtnTemplate) {
+        console.error('[JobBoard] Missing required attribute: dev-target="page-btn-template"');
+        return false;
+      }
+      this.pageBtnWrapper = this.pageBtnTemplate.parentElement;
+      if (!this.pageBtnWrapper) {
+        console.error("[JobBoard] Page button template must have a parent wrapper");
+        return false;
+      }
+      return true;
+    }
+    /**
+     * Bind event listeners
+     */
+    bindEvents() {
+      this.btnPrev?.addEventListener("click", () => this.goToPage(this.currentPage - 1));
+      this.btnNext?.addEventListener("click", () => this.goToPage(this.currentPage + 1));
+    }
+    /**
+     * Load jobs from API
+     */
+    async loadJobs() {
+      try {
+        const response = await fetch(API_ENDPOINT);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const dropdown = toggle.closest(".nav_menu-dropdown");
-        if (!dropdown) {
-          console.error(`Dropdown container not found for ${dropdownName}`);
-          return;
+        this.jobs = await response.json();
+      } catch (error) {
+        console.error("[JobBoard] Failed to fetch jobs:", error);
+        return;
+      }
+      this.extractDepartments();
+      this.renderFilters();
+      this.applyFilter(null);
+    }
+    /**
+     * Extract unique departments that have at least one job
+     */
+    extractDepartments() {
+      const deptSet = /* @__PURE__ */ new Set();
+      this.jobs.forEach((job) => {
+        if (job.department) {
+          deptSet.add(job.department);
         }
-        const content = dropdown.querySelector(".nav_dropdown-content, .navbar_dropdown-content");
-        if (!content) {
-          console.error(`Dropdown content not found for ${dropdownName}`);
-          return;
+      });
+      this.departments = Array.from(deptSet).sort();
+    }
+    /**
+     * Render filter buttons
+     */
+    renderFilters() {
+      if (!this.filtersWrapper || !this.filterTemplate) return;
+      this.filtersWrapper.innerHTML = "";
+      const viewAllBtn = this.filterTemplate.cloneNode(true);
+      const viewAllText = viewAllBtn.querySelector(SELECTORS.filterText);
+      if (viewAllText) {
+        viewAllText.textContent = "View all";
+      }
+      viewAllBtn.classList.add("is-active");
+      viewAllBtn.addEventListener("click", () => this.handleFilterClick(null, viewAllBtn));
+      this.filtersWrapper.appendChild(viewAllBtn);
+      this.departments.forEach((dept) => {
+        const filterBtn = this.filterTemplate.cloneNode(true);
+        const filterText = filterBtn.querySelector(SELECTORS.filterText);
+        if (filterText) {
+          filterText.textContent = dept;
         }
-        toggle.addEventListener("mouseenter", () => {
-          this.handleDropdownEnter(dropdownName, content);
-        });
-        dropdown.addEventListener("mouseleave", () => {
-          this.handleDropdownLeave(dropdownName);
-        });
+        filterBtn.classList.remove("is-active");
+        filterBtn.addEventListener("click", () => this.handleFilterClick(dept, filterBtn));
+        this.filtersWrapper.appendChild(filterBtn);
       });
     }
     /**
-     * Handle dropdown enter event
+     * Handle filter button click
      */
-    handleDropdownEnter(dropdownName, contentElement) {
-      const direction = this.getAnimationDirection(dropdownName);
-      contentElement.classList.remove(
-        "slide-from-left",
-        "slide-from-right",
-        "slide-out-left",
-        "slide-out-right"
-      );
-      if (direction === "left") {
-        contentElement.classList.add("slide-from-left");
-      } else if (direction === "right") {
-        contentElement.classList.add("slide-from-right");
-      }
-      this.state.previous = this.state.current;
-      this.state.current = dropdownName;
+    handleFilterClick(department, button) {
+      const allFilters = this.filtersWrapper?.querySelectorAll(SELECTORS.filterTag);
+      allFilters?.forEach((filter) => filter.classList.remove("is-active"));
+      button.classList.add("is-active");
+      this.applyFilter(department);
     }
     /**
-     * Handle dropdown leave event
+     * Apply filter and reset to page 1
      */
-    handleDropdownLeave(dropdownName) {
-      if (this.state.current === dropdownName) {
-        this.state.previous = this.state.current;
-        this.state.current = null;
+    applyFilter(department) {
+      this.currentFilter = department;
+      this.currentPage = 1;
+      if (department === null) {
+        this.filteredJobs = [...this.jobs];
+      } else {
+        this.filteredJobs = this.jobs.filter((job) => job.department === department);
+      }
+      this.renderJobs();
+      this.renderPagination();
+    }
+    /**
+     * Render job cards for current page
+     */
+    renderJobs() {
+      if (!this.jobList || !this.jobCardTemplate) return;
+      this.jobList.innerHTML = "";
+      const startIndex = (this.currentPage - 1) * JOBS_PER_PAGE;
+      const endIndex = startIndex + JOBS_PER_PAGE;
+      const pageJobs = this.filteredJobs.slice(startIndex, endIndex);
+      pageJobs.forEach((job) => {
+        const card = this.jobCardTemplate.cloneNode(true);
+        const titleEl = card.querySelector(SELECTORS.jobTitle);
+        if (titleEl) {
+          titleEl.textContent = job.title;
+        }
+        const descEl = card.querySelector(SELECTORS.jobDesc);
+        if (descEl) {
+          descEl.textContent = job.location.label;
+        }
+        const categoryEl = card.querySelector(SELECTORS.jobCategory);
+        if (categoryEl) {
+          categoryEl.textContent = job.department;
+        }
+        const ctaEl = card.querySelector(SELECTORS.jobCta);
+        if (ctaEl) {
+          ctaEl.href = job.postingUrl;
+          ctaEl.target = "_blank";
+          ctaEl.rel = "noopener noreferrer";
+        }
+        this.jobList.appendChild(card);
+      });
+    }
+    /**
+     * Render pagination controls
+     */
+    renderPagination() {
+      if (!this.paginationWrapper || !this.pageBtnTemplate || !this.pageBtnWrapper) return;
+      const totalPages = Math.ceil(this.filteredJobs.length / JOBS_PER_PAGE);
+      if (this.filteredJobs.length <= JOBS_PER_PAGE) {
+        this.paginationWrapper.classList.add("hide");
+      } else {
+        this.paginationWrapper.classList.remove("hide");
+      }
+      if (this.btnPrev) {
+        this.btnPrev.disabled = this.currentPage <= 1;
+        this.btnPrev.classList.toggle("is-disabled", this.currentPage <= 1);
+      }
+      if (this.btnNext) {
+        this.btnNext.disabled = this.currentPage >= totalPages;
+        this.btnNext.classList.toggle("is-disabled", this.currentPage >= totalPages);
+      }
+      this.pageBtnWrapper.innerHTML = "";
+      for (let i = 1; i <= totalPages; i++) {
+        const pageBtn = this.pageBtnTemplate.cloneNode(true);
+        pageBtn.textContent = String(i);
+        pageBtn.classList.toggle("is-active", i === this.currentPage);
+        pageBtn.addEventListener("click", () => this.goToPage(i));
+        this.pageBtnWrapper.appendChild(pageBtn);
       }
     }
     /**
-     * Determine animation direction based on dropdown order
+     * Navigate to a specific page
      */
-    getAnimationDirection(currentDropdown) {
-      if (!this.state.previous) return "none";
-      const currentIndex = this.dropdownOrder.indexOf(currentDropdown);
-      const previousIndex = this.dropdownOrder.indexOf(this.state.previous);
-      if (currentIndex > previousIndex) {
-        return "right";
-      }
-      if (currentIndex < previousIndex) {
-        return "left";
-      }
-      return "none";
+    goToPage(page) {
+      const totalPages = Math.ceil(this.filteredJobs.length / JOBS_PER_PAGE);
+      if (page < 1 || page > totalPages) return;
+      this.currentPage = page;
+      this.renderJobs();
+      this.renderPagination();
+      this.jobList?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
     /**
-     * Reset the animation state
+     * Refresh jobs from API
      */
-    reset() {
-      this.state = {
-        current: null,
-        previous: null
-      };
+    async refresh() {
+      await this.loadJobs();
     }
   };
+  window.refreshJobBoard = null;
 
   // src/index.ts
   window.Webflow ||= [];
-  window.Webflow.push(() => {
-    const navbarController = new NavbarAnimationController();
-    navbarController.init();
+  window.Webflow.push(async () => {
+    const jobBoardContainer = document.querySelector('[dev-role="job-container"]');
+    if (jobBoardContainer) {
+      const jobBoard = new JobBoardController();
+      await jobBoard.init();
+      window.refreshJobBoard = () => jobBoard.refresh();
+    }
   });
 })();
 //# sourceMappingURL=index.js.map
