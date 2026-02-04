@@ -110,9 +110,9 @@ export interface Agency {
 }
 
 export enum Name {
-  Chaloner = "Chaloner",
-  Contained = "Contained",
-  Open = "Open",
+  Chaloner = 'Chaloner',
+  Contained = 'Contained',
+  Open = 'Open',
 }
 
 export interface Company {

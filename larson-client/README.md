@@ -202,7 +202,6 @@ To create and publish a new version:
    ```
 
    This opens an interactive prompt where you'll:
-
    - Select the version bump type (patch/minor/major)
    - Write a summary of your changes
    - A changeset file will be created in `.changeset/`
@@ -214,7 +213,6 @@ To create and publish a new version:
    ```
 
    This will:
-
    - Update the version in `package.json`
    - Update the `CHANGELOG.md` file
    - Delete the changeset file

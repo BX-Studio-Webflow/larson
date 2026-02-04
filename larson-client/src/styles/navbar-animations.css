@@ -82,7 +82,9 @@
 
 /* Optional: Add smooth transitions for content inside dropdowns */
 .nav-highlight-wrapper {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
 }
 
 .nav-highlight-wrapper.active {

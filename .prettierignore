@@ -4,3 +4,5 @@ dist/
 # Dependencies and build artifacts
 node_modules/
 .wrangler/
+
+.next/
