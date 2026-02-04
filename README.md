@@ -1,11 +1,69 @@
-# Assembled Brands
+# Larson
 
-A financial platform for brand businesses with integrated onboarding, financial wizards, team management, and document processing capabilities.
+A monorepo for Larson Air Conditioning's careers website, featuring a dynamic job board integrated with BambooHR and Webflow.
 
-This is a monorepo with frontend (Cloudflare Pages) and backend (Cloudflare Workers) packages. For detailed documentation, see [documentation.md](documentation.md).
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Webflow Site                           │
+│              (larson-air-conditioning.webflow.io)           │
+│                           │                                 │
+│                    <script> tag                             │
+└───────────────────────────┼─────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    larson-client                            │
+│              (CDN-hosted JavaScript)                        │
+│                                                             │
+│  • JobBoardController                                       │
+│  • Featured jobs (4 most recent)                            │
+│  • Department filtering                                     │
+│  • Pagination (5 per page)                                  │
+└───────────────────────────┼─────────────────────────────────┘
+                            │ fetch()
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    larson-server                            │
+│                 (Next.js API / Vercel)                      │
+│                                                             │
+│  • /api/jobs endpoint                                       │
+│  • CORS middleware                                          │
+│  • Data transformation                                      │
+└───────────────────────────┼─────────────────────────────────┘
+                            │ Basic Auth
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      BambooHR API                           │
+│          (Applicant Tracking System)                        │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## Packages
+
+| Package | Description | Tech Stack |
+|---------|-------------|------------|
+| [larson-client](./larson-client) | Webflow-integrated client library | TypeScript, esbuild |
+| [larson-server](./larson-server) | API server for job data | Next.js, TypeScript |
+
+## Features
+
+### Job Board
+- **BambooHR Integration**: Real-time job listings from BambooHR ATS
+- **Featured Jobs**: 4 most recent postings displayed prominently
+- **Department Filtering**: Dynamic filters based on active departments
+- **Pagination**: 5 jobs per page with navigation controls
+- **Webflow Compatible**: Uses `dev-target` attributes for DOM manipulation
+
+### API
+- **RESTful Endpoints**: Clean JSON API for job data
+- **CORS Configured**: Supports Webflow and local development
+- **Type-Safe**: Full TypeScript types throughout
 
 ## Reference
 
+- [Quick Start](#quick-start)
 - [Included tools](#included-tools)
 - [Requirements](#requirements)
 - [Getting started](#getting-started)
@@ -21,19 +79,56 @@ This is a monorepo with frontend (Cloudflare Pages) and backend (Cloudflare Work
   - [Continuous Deployment](#continuous-deployment)
   - [How to automatically deploy updates to npm](#how-to-automatically-deploy-updates-to-npm)
 
+## Quick Start
+
+### 1. Install Dependencies
+
+```bash
+pnpm install
+```
+
+### 2. Configure Environment
+
+Create `larson-server/.env`:
+
+```env
+API_KEY=your_bamboohr_api_key
+```
+
+### 3. Start Development Servers
+
+**Terminal 1 - API Server:**
+```bash
+cd larson-server
+pnpm dev
+# Runs at http://localhost:8000
+```
+
+**Terminal 2 - Client Build:**
+```bash
+cd larson-client
+pnpm dev
+# Serves at http://localhost:3000
+```
+
+### 4. Add Script to Webflow
+
+```html
+<script defer src="http://localhost:3000/index.js"></script>
+```
+
 ## Included tools
 
 This project contains preconfigured development tools:
 
-- [TypeScript](https://www.typescriptlang.org/): Type-safe development across frontend and backend.
-- [Cloudflare Workers](https://workers.cloudflare.com/): Serverless edge computing platform.
-- [Cloudflare D1](https://developers.cloudflare.com/d1/): SQLite-based edge database.
-- [Drizzle ORM](https://orm.drizzle.team/): Type-safe database queries and migrations.
+- [TypeScript](https://www.typescriptlang.org/): Type-safe development across client and server.
+- [Next.js](https://nextjs.org/): React framework for the API server.
+- [esbuild](https://esbuild.github.io/): Fast JavaScript bundler for client code.
 - [Playwright](https://playwright.dev/): Fast and reliable end-to-end testing.
-- [Vitest](https://vitest.dev/): Fast unit testing for backend services.
-- [ESLint](https://eslint.org/): Code formatting that assures consistency.
-- [Prettier](https://prettier.io/): Code linting and quality enforcement.
+- [ESLint](https://eslint.org/): Code linting and quality enforcement.
+- [Prettier](https://prettier.io/): Code formatting for consistency.
 - [Changesets](https://github.com/changesets/changesets): Version management and changelog generation.
+- [Finsweet's TypeScript Utils](https://github.com/finsweet/ts-utils): Webflow development utilities.
 
 ## Requirements
 
@@ -46,8 +141,7 @@ This project requires:
 npm i -g pnpm
 ```
 
-- [Cloudflare Account](https://dash.cloudflare.com/sign-up) - For Workers and D1 database
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/) - Cloudflare's CLI tool
+- [BambooHR API Key](https://documentation.bamboohr.com/docs/getting-started) - For job listings
 
 ## Getting started
 
@@ -65,37 +159,46 @@ If this is the first time using Playwright and you want to use it in this projec
 pnpm playwright install
 ```
 
-You can read more about the use of Playwright in the [Testing](#testing) section.
-
 It is also recommended that you install the following extensions in your VSCode editor:
 
 - [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 
-### Database Setup
+### Environment Setup
 
-Initialize the D1 database:
+Create environment files for the server:
 
 ```bash
-cd packages/server
-pnpm wrangler d1 create <database-name>
-pnpm wrangler d1 migrations apply <database-name>
+# larson-server/.env
+API_KEY=your_bamboohr_api_key
 ```
-
-Update `packages/server/wrangler.jsonc` with your database ID.
 
 ### Building
 
 To run the development servers:
 
-- `pnpm dev`: Runs both frontend and backend in development mode
-- `pnpm build`: Builds both packages for production
-
-**Frontend** (Cloudflare Pages):
+**Client** (Webflow JavaScript):
 
 ```bash
-cd packages/frontend
+cd larson-client
 pnpm dev  # Development server at localhost:3000
+```
+
+**Server** (Next.js API):
+
+```bash
+cd larson-server
+pnpm dev  # API server at localhost:8000
+```
+
+### Production Builds
+
+```bash
+# Client - outputs to larson-client/dist/
+cd larson-client && pnpm build
+
+# Server - outputs to larson-server/.next/
+cd larson-server && pnpm build
 ```
 
 **Backend** (Cloudflare Workers):
@@ -107,9 +210,9 @@ pnpm dev  # Local worker with D1 database
 
 ## Testing
 
-This project uses [Playwright](https://playwright.dev/) for end-to-end testing and [Vitest](https://vitest.dev/) for unit tests.
+This project uses [Playwright](https://playwright.dev/) for end-to-end testing.
 
-**End-to-End Tests:**
+**Run Tests:**
 
 ```bash
 pnpm test              # Run Playwright tests headless
@@ -118,15 +221,7 @@ pnpm test:headed       # Run tests with browser UI
 
 Tests are located in:
 
-- `packages/frontend/tests/` - Frontend E2E tests
-- `packages/server/test/` - Backend integration tests
-
-**Unit Tests:**
-
-```bash
-cd packages/server
-pnpm test  # Run Vitest unit tests
-```
+- `larson-client/tests/` - Client E2E tests
 
 ## Contributing guide
 
@@ -138,31 +233,38 @@ Development workflow:
 4. Create a Changeset: `pnpm changeset` (select packages, bump type, and describe changes).
 5. Commit your code and the changeset file, then push.
 6. Open a Pull Request and wait for CI checks to pass.
-7. After merging to `main`, Changesets will create a "Version Packages" PR.
+7. After merging, Changesets will create a "Version Packages" PR.
 8. Review and merge the version PR to update `CHANGELOG.md` and bump versions.
-9. Deploy manually to Cloudflare after the version PR is merged.
 
 ## Pre-defined scripts
 
-Available scripts in `package.json`:
-
 **Root level:**
 
-- `pnpm dev`: Run both frontend and backend in development mode
-- `pnpm build`: Build both packages for production
-- `pnpm lint`: Scan codebase for linting errors
-- `pnpm format`: Format code with Prettier
-- `pnpm test`: Run all Playwright tests
-- `pnpm test:headed`: Run Playwright tests with browser UI
-- `pnpm changeset`: Create a new changeset for version tracking
-- `pnpm changeset version`: Manually bump versions from changesets
+| Script | Description |
+|--------|-------------|
+| `pnpm lint` | Scan codebase for linting errors |
+| `pnpm lint:fix` | Fix auto-fixable linting issues |
+| `pnpm format` | Format code with Prettier |
+| `pnpm test` | Run all Playwright tests |
+| `pnpm test:headed` | Run Playwright tests with browser UI |
+| `pnpm changeset` | Create a new changeset for version tracking |
+| `pnpm changeset version` | Bump versions from changesets |
 
-**Package level** (`packages/frontend/` or `packages/server/`):
+**larson-client:**
 
-- `pnpm dev`: Start development server
-- `pnpm build`: Build for production
-- `pnpm deploy`: Deploy to Cloudflare (via Wrangler)
-- `pnpm test`: Run tests (Vitest for server)
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Start dev server with hot reload at localhost:3000 |
+| `pnpm build` | Build to `dist/` for production |
+| `pnpm check` | TypeScript type checking |
+
+**larson-server:**
+
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Start Next.js dev server at localhost:8000 |
+| `pnpm build` | Build for production |
+| `pnpm start` | Start production server |
 
 ## CI/CD
 
@@ -172,12 +274,10 @@ This template contains a set of helpers with proper CI/CD workflows.
 
 When you open a Pull Request, a Continuous Integration workflow will run to:
 
-- Lint & check your code. It uses the `pnpm lint` and `pnpm check` commands under the hood.
-- Run the automated tests. It uses the `pnpm test` command under the hood.
+- Lint & check your code using `pnpm lint` and `pnpm check`
+- Run the automated tests using `pnpm test`
 
 If any of these jobs fail, you will get a warning in your Pull Request and should try to fix your code accordingly.
-
-**Note:** If your project doesn't contain any defined tests in the `/tests` folder, you can skip the Tests workflow job by commenting it out in the `.github/workflows/ci.yml` file. This will significantly improve the workflow running times.
 
 ### Continuous Deployment
 
@@ -189,47 +289,43 @@ If any of these jobs fail, you will get a warning in your Pull Request and shoul
 pnpm changeset
 ```
 
-You'll select which packages changed (frontend/server), the version bump type (major/minor/patch), and describe the changes.
+You'll select which packages changed, the version bump type (major/minor/patch), and describe the changes.
 
 **Workflow:**
 
 1. Merge PR with changeset to `main`
 2. Changesets bot creates a "Version Packages" PR automatically
 3. Review and merge the version PR to update `CHANGELOG.md` and bump versions
-4. Deploy manually to Cloudflare:
+4. Deploy:
+   - **Client**: Tag release and update CDN URL in Webflow
+   - **Server**: Deploy to Vercel (automatic on push to main)
+
+### Client Deployment
+
+After creating a version:
 
 ```bash
-# Frontend
-cd packages/frontend && pnpm wrangler pages deploy
-
-# Backend
-cd packages/server && pnpm wrangler deploy
-
-# Database migrations
-cd packages/server && pnpm wrangler d1 migrations apply <database-name> --remote
+git tag v0.0.1
+git push origin v0.0.1
 ```
 
-#### How to enable Continuous Deployment with Changesets
+Update the script tag in Webflow:
 
-Some repositories may not have the required permissions to let Changesets interact with the repository.
+```html
+<script src="https://cdn.jsdelivr.net/gh/your-org/larson@v0.0.1/larson-client/dist/index.js"></script>
+```
 
-To enable full compatibility with Changesets, go to the repository settings (`Settings > Actions > General > Workflow Permissions`) and define:
+### Server Deployment
 
-- ✅ Read and write permissions.
-- ✅ Allow GitHub Actions to create and approve pull requests.
+The server auto-deploys to Vercel on push to `main`. Ensure environment variables are set in Vercel dashboard:
 
-Enabling this setting for your organization account (`Account Settings > Actions > General`) could help streamline the process. By doing so, any new repos created under the org will automatically inherit the setting, which can save your teammates time and effort. This can only be applied to organization accounts at the time.
+- `API_KEY` - BambooHR API key
 
-#### Deployment Configuration
+#### Enabling Changesets Permissions
 
-Ensure Cloudflare secrets and environment variables are configured:
+Some repositories may not have the required permissions for Changesets.
 
-1. **Environment Variables**: Set in `wrangler.jsonc` files
-2. **Secrets**: Use Wrangler CLI:
-   ```bash
-   pnpm wrangler secret put SECRET_NAME
-   ```
-3. **D1 Database**: Bind database ID in `wrangler.jsonc`
-4. **R2 Storage**: Configure buckets for asset storage (if applicable)
+Go to repository settings (`Settings > Actions > General > Workflow Permissions`) and enable:
 
-For production deployments, ensure all secrets (JWT keys, API keys, encryption keys) are set via Wrangler before deploying.
+- ✅ Read and write permissions
+- ✅ Allow GitHub Actions to create and approve pull requests

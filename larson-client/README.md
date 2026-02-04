@@ -1,11 +1,19 @@
-# Finsweet Developer Starter
+# Larson Client
 
-A starter template for both Client & Power projects.
+A Webflow-integrated client library for Larson Air Conditioning, providing dynamic job board functionality with filtering, pagination, and featured listings.
 
 Before starting to work with this template, please take some time to read through the documentation.
 
 ## Reference
 
+- [Features](#features)
+- [Job Board System](#job-board-system)
+  - [How It Works](#how-it-works)
+  - [DOM Attributes Reference](#dom-attributes-reference)
+  - [Featured Jobs Section](#featured-jobs-section)
+  - [Main Job Listing](#main-job-listing)
+  - [Filtering](#filtering)
+  - [Pagination](#pagination)
 - [Included tools](#included-tools)
 - [Requirements](#requirements)
 - [Getting started](#getting-started)
@@ -20,6 +28,154 @@ Before starting to work with this template, please take some time to read throug
   - [Continuous Integration](#continuous-integration)
   - [Continuous Deployment](#continuous-deployment)
   - [How to automatically deploy updates to npm](#how-to-automatically-deploy-updates-to-npm)
+
+## Features
+
+- **Dynamic Job Board**: Fetches job listings from BambooHR API via the larson-server
+- **Featured Jobs**: Displays 4 most recent job postings sorted by date
+- **Department Filtering**: Dynamic filter buttons for each department with active jobs
+- **Pagination**: 5 jobs per page with prev/next navigation
+- **Webflow Integration**: Uses `dev-target` attributes for reliable DOM selection
+
+## Job Board System
+
+The job board (`JobBoardController`) is a fully client-side system that integrates with Webflow pages using `dev-target` and `dev-role` attributes for DOM manipulation.
+
+### How It Works
+
+1. **Initialization**: When the page loads, the controller queries for required DOM elements
+2. **Data Fetching**: Jobs are fetched from the API endpoint (`/api/jobs`)
+3. **Rendering**: Featured jobs, filters, and paginated job listings are rendered
+4. **Interactivity**: Users can filter by department and navigate pages
+
+### DOM Attributes Reference
+
+All DOM manipulation relies exclusively on `dev-target` and `dev-role` attributes. If any required attribute is missing, the controller logs an error and exits gracefully.
+
+#### Container Elements
+
+| Attribute | Element | Required |
+|-----------|---------|----------|
+| `dev-role="job-container"` | Main job board wrapper | ✅ |
+| `dev-role="job-filters-wrapper"` | Filter buttons container | ✅ |
+| `dev-role="job-pagination-wrapper"` | Pagination controls wrapper | ✅ |
+
+#### Job List Elements
+
+| Attribute | Element | Required |
+|-----------|---------|----------|
+| `dev-target="job-list"` | Job cards `<ul>` container | ✅ |
+| `dev-target="one-job-card"` | Job card template `<li>` | ✅ |
+| `dev-role="job-title"` | Job title heading | ✅ |
+| `dev-role="job-desc"` | Job description (shows `location.label`) | ✅ |
+| `dev-target="job-category"` | Department pill | ✅ |
+| `dev-target="job-cta"` | Apply button `<a>` | ✅ |
+
+#### Filter Elements
+
+| Attribute | Element | Required |
+|-----------|---------|----------|
+| `dev-target="job-filter-tag"` | Filter button template | ✅ |
+| `dev-target="job-filter-text"` | Filter button text | ✅ |
+
+#### Pagination Elements
+
+| Attribute | Element | Required |
+|-----------|---------|----------|
+| `dev-target="btn-prev"` | Previous page button | ✅ |
+| `dev-target="btn-next"` | Next page button | ✅ |
+| `dev-target="page-btn-template"` | Page number button template | ✅ |
+
+#### Featured Jobs Elements (Optional)
+
+| Attribute | Element | Required |
+|-----------|---------|----------|
+| `dev-target="job-list-featured"` | Featured jobs `<ul>` container | ❌ |
+| `dev-target="featured-job-card"` | Featured job card template | ❌ |
+| `dev-target="featured-job-title"` | Featured job title | ❌ |
+| `dev-target="featured-job-desc"` | Featured job location | ❌ |
+| `dev-target="featured-job-category"` | Featured job department | ❌ |
+| `dev-target="featured-job-cta"` | Featured job apply button | ❌ |
+
+### Featured Jobs Section
+
+Displays the **4 most recent** job postings sorted by `postedDate` (newest first).
+
+```html
+<ul dev-target="job-list-featured" class="wrapper--job-list">
+  <li dev-target="featured-job-card" class="card--job-post">
+    <h3 dev-target="featured-job-title">Job Title</h3>
+    <div dev-target="featured-job-category">Department</div>
+    <p dev-target="featured-job-desc">Location</p>
+    <a dev-target="featured-job-cta" href="#">Apply now</a>
+  </li>
+</ul>
+```
+
+**Behavior:**
+- Automatically renders if elements exist on the page
+- Skips silently if featured elements are not present
+- Jobs open in a new tab when clicking "Apply"
+
+### Main Job Listing
+
+Displays all jobs with pagination (5 per page).
+
+```html
+<ul dev-target="job-list" class="wrapper--job-list">
+  <li dev-target="one-job-card" class="card--job-post">
+    <h3 dev-role="job-title">Job Title</h3>
+    <div dev-target="job-category">Department</div>
+    <p dev-role="job-desc">Location</p>
+    <a dev-target="job-cta" href="#">Apply now</a>
+  </li>
+</ul>
+```
+
+### Filtering
+
+Filters are dynamically generated based on departments that have at least one active job.
+
+```html
+<div dev-role="job-filters-wrapper">
+  <button dev-target="job-filter-tag" class="job-filter is-active">
+    <div dev-target="job-filter-text">View all</div>
+  </button>
+</div>
+```
+
+**Behavior:**
+- "View all" filter shows all jobs
+- Department filters only show jobs in that department
+- Active filter receives `is-active` class
+- Only one filter can be active at a time
+- Changing filter resets to page 1
+
+### Pagination
+
+```html
+<div dev-role="job-pagination-wrapper">
+  <button dev-target="btn-prev">←</button>
+  <div class="wrapper--page-buttons">
+    <button dev-target="page-btn-template">1</button>
+  </div>
+  <button dev-target="btn-next">→</button>
+</div>
+```
+
+**Behavior:**
+- Shows 5 jobs per page
+- Hidden when total jobs ≤ 5 (adds `hide` class)
+- Prev/Next buttons disabled at bounds (adds `is-disabled` class)
+- Page buttons show `is-active` class for current page
+- Scrolls to job list when changing pages
+
+### Global Functions
+
+```javascript
+// Manually refresh jobs from API
+window.refreshJobBoard();
+```
 
 ## Included tools
 

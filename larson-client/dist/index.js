@@ -7,6 +7,7 @@
   var JOBS_PER_PAGE = 5;
   var devMode = true;
   var API_ENDPOINT = devMode ? "http://localhost:8000/api/jobs" : "https://vercel.com/api/jobs";
+  var FEATURED_JOBS_COUNT = 4;
   var SELECTORS = {
     container: '[dev-role="job-container"]',
     filtersWrapper: '[dev-role="job-filters-wrapper"]',
@@ -21,7 +22,14 @@
     paginationWrapper: '[dev-role="job-pagination-wrapper"]',
     btnPrev: '[dev-target="btn-prev"]',
     btnNext: '[dev-target="btn-next"]',
-    pageBtnTemplate: '[dev-target="page-btn-template"]'
+    pageBtnTemplate: '[dev-target="page-btn-template"]',
+    // Featured jobs selectors
+    featuredJobList: '[dev-target="job-list-featured"]',
+    featuredJobCard: '[dev-target="featured-job-card"]',
+    featuredJobTitle: '[dev-target="featured-job-title"]',
+    featuredJobDesc: '[dev-target="featured-job-desc"]',
+    featuredJobCategory: '[dev-target="featured-job-category"]',
+    featuredJobCta: '[dev-target="featured-job-cta"]'
   };
   var JobBoardController = class {
     jobs = [];
@@ -40,6 +48,9 @@
     btnNext = null;
     pageBtnTemplate = null;
     pageBtnWrapper = null;
+    // Featured jobs DOM elements (optional - may not exist on all pages)
+    featuredJobList = null;
+    featuredJobCardTemplate = null;
     /**
      * Initialize the job board
      */
@@ -104,6 +115,11 @@
         console.error("[JobBoard] Page button template must have a parent wrapper");
         return false;
       }
+      this.featuredJobList = document.querySelector(SELECTORS.featuredJobList);
+      this.featuredJobCardTemplate = document.querySelector(SELECTORS.featuredJobCard);
+      if (this.featuredJobList && !this.featuredJobCardTemplate) {
+        console.error('[JobBoard] Missing required attribute: dev-target="featured-job-card"');
+      }
       return true;
     }
     /**
@@ -128,8 +144,39 @@
         return;
       }
       this.extractDepartments();
+      this.renderFeaturedJobs();
       this.renderFilters();
       this.applyFilter(null);
+    }
+    /**
+     * Render featured jobs (4 most recent by postedDate)
+     */
+    renderFeaturedJobs() {
+      if (!this.featuredJobList || !this.featuredJobCardTemplate) return;
+      this.featuredJobList.innerHTML = "";
+      const featuredJobs = [...this.jobs].sort((a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime()).slice(0, FEATURED_JOBS_COUNT);
+      featuredJobs.forEach((job) => {
+        const card = this.featuredJobCardTemplate.cloneNode(true);
+        const titleEl = card.querySelector(SELECTORS.featuredJobTitle);
+        if (titleEl) {
+          titleEl.textContent = job.title;
+        }
+        const descEl = card.querySelector(SELECTORS.featuredJobDesc);
+        if (descEl) {
+          descEl.textContent = job.location.label;
+        }
+        const categoryEl = card.querySelector(SELECTORS.featuredJobCategory);
+        if (categoryEl) {
+          categoryEl.textContent = job.department;
+        }
+        const ctaEl = card.querySelector(SELECTORS.featuredJobCta);
+        if (ctaEl) {
+          ctaEl.href = job.postingUrl;
+          ctaEl.target = "_blank";
+          ctaEl.rel = "noopener noreferrer";
+        }
+        this.featuredJobList.appendChild(card);
+      });
     }
     /**
      * Extract unique departments that have at least one job

@@ -43,6 +43,9 @@ const JOBS_PER_PAGE = 5;
 const devMode = true;
 const API_ENDPOINT = devMode ? 'http://localhost:8000/api/jobs' : 'https://vercel.com/api/jobs';
 
+// Constants
+const FEATURED_JOBS_COUNT = 4;
+
 // Dev-target selectors
 const SELECTORS = {
   container: '[dev-role="job-container"]',
@@ -59,6 +62,13 @@ const SELECTORS = {
   btnPrev: '[dev-target="btn-prev"]',
   btnNext: '[dev-target="btn-next"]',
   pageBtnTemplate: '[dev-target="page-btn-template"]',
+  // Featured jobs selectors
+  featuredJobList: '[dev-target="job-list-featured"]',
+  featuredJobCard: '[dev-target="featured-job-card"]',
+  featuredJobTitle: '[dev-target="featured-job-title"]',
+  featuredJobDesc: '[dev-target="featured-job-desc"]',
+  featuredJobCategory: '[dev-target="featured-job-category"]',
+  featuredJobCta: '[dev-target="featured-job-cta"]',
 } as const;
 
 export class JobBoardController {
@@ -79,6 +89,10 @@ export class JobBoardController {
   private btnNext: HTMLButtonElement | null = null;
   private pageBtnTemplate: HTMLButtonElement | null = null;
   private pageBtnWrapper: HTMLElement | null = null;
+
+  // Featured jobs DOM elements (optional - may not exist on all pages)
+  private featuredJobList: HTMLElement | null = null;
+  private featuredJobCardTemplate: HTMLElement | null = null;
 
   /**
    * Initialize the job board
@@ -156,6 +170,14 @@ export class JobBoardController {
       return false;
     }
 
+    // Featured jobs elements (optional - won't fail if not present)
+    this.featuredJobList = document.querySelector(SELECTORS.featuredJobList);
+    this.featuredJobCardTemplate = document.querySelector(SELECTORS.featuredJobCard);
+
+    if (this.featuredJobList && !this.featuredJobCardTemplate) {
+      console.error('[JobBoard] Missing required attribute: dev-target="featured-job-card"');
+    }
+
     return true;
   }
 
@@ -183,8 +205,57 @@ export class JobBoardController {
     }
 
     this.extractDepartments();
+    this.renderFeaturedJobs();
     this.renderFilters();
     this.applyFilter(null); // Show all jobs initially
+  }
+
+  /**
+   * Render featured jobs (4 most recent by postedDate)
+   */
+  private renderFeaturedJobs(): void {
+    if (!this.featuredJobList || !this.featuredJobCardTemplate) return;
+
+    // Clear existing featured jobs
+    this.featuredJobList.innerHTML = '';
+
+    // Sort jobs by postedDate (most recent first) and take top 4
+    const featuredJobs = [...this.jobs]
+      .sort((a, b) => new Date(b.postedDate).getTime() - new Date(a.postedDate).getTime())
+      .slice(0, FEATURED_JOBS_COUNT);
+
+    // Render each featured job
+    featuredJobs.forEach((job) => {
+      const card = this.featuredJobCardTemplate!.cloneNode(true) as HTMLElement;
+
+      // Job title
+      const titleEl = card.querySelector(SELECTORS.featuredJobTitle);
+      if (titleEl) {
+        titleEl.textContent = job.title;
+      }
+
+      // Job description (location.label)
+      const descEl = card.querySelector(SELECTORS.featuredJobDesc);
+      if (descEl) {
+        descEl.textContent = job.location.label;
+      }
+
+      // Job category (department)
+      const categoryEl = card.querySelector(SELECTORS.featuredJobCategory);
+      if (categoryEl) {
+        categoryEl.textContent = job.department;
+      }
+
+      // Job CTA
+      const ctaEl = card.querySelector(SELECTORS.featuredJobCta) as HTMLAnchorElement | null;
+      if (ctaEl) {
+        ctaEl.href = job.postingUrl;
+        ctaEl.target = '_blank';
+        ctaEl.rel = 'noopener noreferrer';
+      }
+
+      this.featuredJobList!.appendChild(card);
+    });
   }
 
   /**
