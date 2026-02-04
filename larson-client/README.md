@@ -256,6 +256,7 @@ When you run `pnpm dev`, two things happen:
 When serving files from a CDN or remote origin (e.g., `https://cdn.jsdelivr.net/...` or Webflow), live reload is automatically disabled to prevent CORS errors.
 
 **For production/CDN deployments:**
+
 - Always use `pnpm build` (sets `NODE_ENV=production`) which completely excludes live-reload from the bundle
 - Dev builds (`pnpm dev`) include live-reload code but it's safely disabled on non-localhost origins
 
