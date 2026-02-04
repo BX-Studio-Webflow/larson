@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server';
 const acceptedOrigins = [
   'http://localhost:3000',
   'http://localhost:8000',
-  'https://larson-air-conditioning.webflow.io/',
+  'https://larson-air-conditioning.webflow.io',
   'https://chaloner.com',
   'https://www.chaloner.com',
 ];
