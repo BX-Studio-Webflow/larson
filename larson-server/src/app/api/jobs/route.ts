@@ -1,22 +1,27 @@
-import { JobsResponse } from '@/types/jobs';
+import { BambooHRJob, TransformedJob } from '@/types/jobs';
 import { NextResponse } from 'next/server';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 const REVALIDATE_SECONDS = 10 * 60;
 
+const BAMBOOHR_API_URL = 'https://larsonairaz.bamboohr.com/api/v1/applicant_tracking/jobs';
+
 export async function GET() {
   try {
-    const baseURL = new URL(`https://app.loxo.co/api/chaloner/jobs`);
-    baseURL.searchParams.append('published', 'true');
-    baseURL.searchParams.append('job_status_id', '79157');
-    baseURL.searchParams.append('per_page', '100');
-    const BEARER_AUTH_HEADER = 'Bearer ' + process.env.BEARER_AUTH!;
+    const baseURL = new URL(BAMBOOHR_API_URL);
+    baseURL.searchParams.append('statusGroups', 'Open');
+    baseURL.searchParams.append('sortBy', 'status');
+    baseURL.searchParams.append('sortOrder', 'DESC');
+
+    // Basic Auth: username = API_KEY, password = "x" (BambooHR convention)
+    const apiKey = process.env.API_KEY!;
+    const basicAuth = Buffer.from(`${apiKey}:x`).toString('base64');
 
     const response = await fetch(baseURL.toString(), {
       headers: {
         Accept: 'application/json',
-        Authorization: BEARER_AUTH_HEADER,
+        Authorization: `Basic ${basicAuth}`,
       },
       next: { revalidate: REVALIDATE_SECONDS },
     });
@@ -25,23 +30,47 @@ export async function GET() {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const jobsResponse: JobsResponse = await response.json();
+    const jobs: BambooHRJob[] = await response.json();
 
-    return NextResponse.json(restructureJobsData(jobsResponse));
+    return NextResponse.json(restructureJobsData(jobs));
   } catch (error) {
     console.error('Error fetching jobs:', error);
     return NextResponse.json({ error: 'Failed to fetch jobs' }, { status: 500 });
   }
 }
 
-function restructureJobsData(jobsResponse: JobsResponse) {
-  return jobsResponse.results.map((job) => ({
+function restructureJobsData(jobs: BambooHRJob[]): TransformedJob[] {
+  return jobs.map((job) => ({
     id: job.id,
-    title: job.title,
-    company: job.company.name,
-    location: job.macro_address ?? 'Remote',
-    published_at: job.published_at,
-    updated_at: job.updated_at,
-    opened_at: job.opened_at,
+    title: job.title.label ?? 'Untitled Position',
+    postedDate: job.postedDate,
+    location: {
+      city: job.location.address.city,
+      state: job.location.address.state,
+      label: job.location.label,
+      address: {
+        line1: job.location.address.addressLine1,
+        line2: job.location.address.addressLine2,
+        city: job.location.address.city,
+        state: job.location.address.state,
+        zipcode: job.location.address.zipcode,
+        country: job.location.address.country,
+      },
+    },
+    department: job.department.label ?? 'General',
+    status: {
+      id: job.status.id,
+      label: job.status.label,
+    },
+    hiringLead: {
+      name: `${job.hiringLead.firstName} ${job.hiringLead.lastName}`,
+      avatar: job.hiringLead.avatar,
+    },
+    applicants: {
+      new: job.newApplicantsCount,
+      active: job.activeApplicantsCount,
+      total: job.totalApplicantsCount,
+    },
+    postingUrl: job.postingUrl,
   }));
 }
