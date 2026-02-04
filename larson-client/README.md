@@ -249,6 +249,16 @@ When you run `pnpm dev`, two things happen:
 
 - Live Reloading is enabled by default, meaning that every time you save a change in your files, the website you're working on will reload automatically. You can disable it in `/bin/build.js`.
 
+#### Live Reload & CDN/Production Builds
+
+**Important:** Live reload only works when the page is served from `localhost`. The live-reload code checks `location.hostname` and only activates on `localhost` or `127.0.0.1`.
+
+When serving files from a CDN or remote origin (e.g., `https://cdn.jsdelivr.net/...` or Webflow), live reload is automatically disabled to prevent CORS errors.
+
+**For production/CDN deployments:**
+- Always use `pnpm build` (sets `NODE_ENV=production`) which completely excludes live-reload from the bundle
+- Dev builds (`pnpm dev`) include live-reload code but it's safely disabled on non-localhost origins
+
 ### Building multiple files
 
 If you need to build multiple files into different outputs, you can do it by updating the build settings.
