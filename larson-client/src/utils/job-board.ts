@@ -40,8 +40,10 @@ interface Job {
 
 // Constants
 const JOBS_PER_PAGE = 5;
-const devMode = true;
-const API_ENDPOINT = devMode ? 'http://localhost:8000/api/jobs' : 'https://vercel.com/api/jobs';
+const devMode = localStorage.getItem('devMode') === 'true';
+const API_ENDPOINT = devMode
+  ? 'http://localhost:8000/api/jobs'
+  : 'https://larson-server.vercel.app/api/jobs';
 
 // Constants
 const FEATURED_JOBS_COUNT = 4;

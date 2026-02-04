@@ -5,17 +5,25 @@ export const dynamic = 'force-dynamic';
 
 const REVALIDATE_SECONDS = 10 * 60;
 
-const BAMBOOHR_API_URL = 'https://larsonairaz.bamboohr.com/api/v1/applicant_tracking/jobs';
+// BambooHR API Gateway URL (not the web interface URL)
+const BAMBOOHR_API_URL =
+  'https://api.bamboohr.com/api/gateway.php/larsonairaz/v1/applicant_tracking/jobs';
 
 export async function GET() {
   try {
+    const apiKey = process.env.API_KEY;
+
+    if (!apiKey) {
+      console.error('API_KEY environment variable is not set');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
     const baseURL = new URL(BAMBOOHR_API_URL);
     baseURL.searchParams.append('statusGroups', 'Open');
     baseURL.searchParams.append('sortBy', 'status');
     baseURL.searchParams.append('sortOrder', 'DESC');
 
     // Basic Auth: username = API_KEY, password = "x" (BambooHR convention)
-    const apiKey = process.env.API_KEY!;
     const basicAuth = Buffer.from(`${apiKey}:x`).toString('base64');
 
     const response = await fetch(baseURL.toString(), {
@@ -27,6 +35,8 @@ export async function GET() {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`BambooHR API error: ${response.status} - ${errorText}`);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 

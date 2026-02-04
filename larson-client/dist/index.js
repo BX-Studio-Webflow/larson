@@ -5,8 +5,8 @@
 
   // src/utils/job-board.ts
   var JOBS_PER_PAGE = 5;
-  var devMode = true;
-  var API_ENDPOINT = devMode ? "http://localhost:8000/api/jobs" : "https://vercel.com/api/jobs";
+  var devMode = localStorage.getItem("devMode") === "true";
+  var API_ENDPOINT = devMode ? "http://localhost:8000/api/jobs" : "https://larson-server.vercel.app/api/jobs";
   var FEATURED_JOBS_COUNT = 4;
   var SELECTORS = {
     container: '[dev-role="job-container"]',
