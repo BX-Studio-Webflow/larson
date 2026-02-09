@@ -1,7 +1,7 @@
 import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 
-export async function POST() {
+export async function GET() {
   try {
     // Revalidate the jobs API route
     revalidatePath('/api/jobs');
