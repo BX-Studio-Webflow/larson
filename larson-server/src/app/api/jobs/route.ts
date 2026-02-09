@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-const REVALIDATE_SECONDS = 10 * 60;
+const REVALIDATE_SECONDS = 12 * 60 * 60; // 12 hours
 
 // BambooHR API Gateway URL (not the web interface URL)
 const BAMBOOHR_API_URL =
